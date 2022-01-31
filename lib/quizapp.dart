@@ -39,7 +39,13 @@ class _QuizAppState extends State<QuizApp> {
     setState(() {
       _questionIndex = _questionIndex + 1 < questions.length
           ? ++_questionIndex
-          : _questionIndex;
+          : questions.length;
+    });
+  }
+
+  void restart(){
+    this.setState(() {
+      _questionIndex = 0;
     });
   }
 
@@ -48,13 +54,22 @@ class _QuizAppState extends State<QuizApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(),
-        body: Column(
+        body: _questionIndex < questions.length ?
+        Column(
           children: [
             Questions(questions[_questionIndex]['question']),
             for(var i = 0; i< questions[_questionIndex]['options'].length; i++)
               Answer(answerQuestion, questions[_questionIndex]['options'][i])
           ],
-        ),
+        ): Container(
+          width: double.infinity,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Quiz Finished", style: TextStyle(fontSize: 28),),
+              ElevatedButton(onPressed: restart, child: Text("Restart", style: TextStyle(fontSize: 20),))
+            ],),
+        )
       ),
     );
   }
@@ -90,7 +105,7 @@ class Answer extends StatelessWidget {
     return Container(
       width: double.infinity,
       child: ElevatedButton(
-        child: Text(answer),
+        child: Text(answer, style: TextStyle(fontSize: 18)),
         onPressed: this.selectHandler,
       ),
     );
