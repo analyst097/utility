@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -6,6 +8,9 @@ void main() {
 }
 
 class QuizApp extends StatefulWidget {
+  const QuizApp({Key? key}) : super(key: key);
+
+  @override
   State<StatefulWidget> createState() => _QuizAppState();
 }
 
@@ -18,7 +23,7 @@ class _QuizAppState extends State<QuizApp> {
       'options': ['Male', 'Female', 'Others'],
     },
     {
-      'question': 'Employment status',
+      'question': 'Employment status?',
       'options': ['Self', 'Private Org', 'Govt. Org', 'Unemployed'],
     },
     {
@@ -35,17 +40,26 @@ class _QuizAppState extends State<QuizApp> {
     }
   ];
 
-  void answerQuestion() {
-    setState(() {
-      _questionIndex = _questionIndex + 1 < questions.length
-          ? ++_questionIndex
-          : questions.length;
-    });
+  List results = [];
+
+  VoidCallback answerQuestion(answer) {
+    return (){
+      setState(() {
+        if(_questionIndex < questions.length){
+          results.add({
+            'question': questions[_questionIndex]['question'],
+            'answer': answer
+          });
+          _questionIndex++;
+        }
+      });
+    };
   }
 
   void restart(){
-    this.setState(() {
+    setState(() {
       _questionIndex = 0;
+      results = [];
     });
   }
 
@@ -53,9 +67,12 @@ class _QuizAppState extends State<QuizApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          title: Text("Quiz App"),
+        ),
         body: _questionIndex < questions.length ?
-        Column(
+        ListView(
+          padding: EdgeInsets.all(20),
           children: [
             Questions(questions[_questionIndex]['question']),
             for(var i = 0; i< questions[_questionIndex]['options'].length; i++)
@@ -63,12 +80,7 @@ class _QuizAppState extends State<QuizApp> {
           ],
         ): Container(
           width: double.infinity,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Quiz Finished", style: TextStyle(fontSize: 28),),
-              ElevatedButton(onPressed: restart, child: Text("Restart", style: TextStyle(fontSize: 20),))
-            ],),
+          child: Results(results, restart),
         )
       ),
     );
@@ -85,7 +97,7 @@ class Questions extends StatelessWidget {
       width: double.infinity,
       child: Text(
         this.question,
-        style: TextStyle(fontSize: 28),
+        style: TextStyle(fontSize: 24),
       ),
       alignment: Alignment.center,
       margin: EdgeInsets.all(10),
@@ -95,7 +107,7 @@ class Questions extends StatelessWidget {
 
 class Answer extends StatelessWidget {
 
-  final VoidCallback selectHandler;
+  final Function selectHandler;
   final String answer;
 
   Answer(this.selectHandler, this.answer);
@@ -106,8 +118,36 @@ class Answer extends StatelessWidget {
       width: double.infinity,
       child: ElevatedButton(
         child: Text(answer, style: TextStyle(fontSize: 18)),
-        onPressed: this.selectHandler,
+        onPressed: selectHandler(answer),
       ),
+    );
+  }
+}
+
+class Results extends StatelessWidget{
+
+  List results;
+  final VoidCallback restartHandler;
+
+  Results(this.results, this.restartHandler);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        ListTile(
+          title: Text("Results", style: TextStyle(fontSize: 23,),),
+          ),
+        for(var i=0; i<results.length; i++)
+          ListTile(
+            title: Text("Q. "+ results[i]['question'], style: TextStyle(fontSize: 20,color: Colors.black54),),
+            subtitle: Text("A. "+results[i]['answer'], style: TextStyle(fontSize: 18, color: Theme.of(context).primaryColor),),),
+        Container(
+          padding: EdgeInsets.all(20),
+          child: ElevatedButton(child: Text("Restart Quiz", style: TextStyle(fontSize: 18),), onPressed: restartHandler,)
+          ,
+        )
+      ],
     );
   }
 }
